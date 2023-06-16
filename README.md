@@ -1,13 +1,14 @@
 # metatrader
-This MQL5 Expert Advisor script automates the following strategy:
-  1)  On a 4-hour chart, create two pairs of moving average
-      indicators as follows:
-      a)  72-period Simple Moving Average of the highs
-      b)  72-period Simple Moving Average of the lows
-      c)  12-period Exponential Moving Average of the highs
-      d)  12-period Exponential Moving Average of the lows
+This MQL5 Expert Advisor script automates alerts for the following strategy:
 
-      This sets up two bands or channels.
+On a 4-hour chart, create two pairs of moving average
+indicators as follows:
+  1)  72-period Simple Moving Average of the highs
+  2)  72-period Simple Moving Average of the lows
+  3)  12-period Exponential Moving Average of the highs
+  4)  12-period Exponential Moving Average of the lows
+
+This sets up two bands or channels.
 
 When the 12-period moving average band sits above the
 72-period band, we consider the trend to be up.  When this

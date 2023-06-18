@@ -97,7 +97,8 @@ void OnTick()
    double MAFastHighCurr = MAFastHigharray[0];
    double MAFastLowCurr = MAFastLowarray[0];
 
-   if (KValueCurr >= VERY_HIGH_STOCHASTIC && DValueCurr >= VERY_HIGH_STOCHASTIC)
+   if (KValueCurr > DValueCurr &&
+       KValueCurr >= VERY_HIGH_STOCHASTIC && DValueCurr >= VERY_HIGH_STOCHASTIC)
    {
       Comment(StringFormat("\nVERY HIGH STOCHASTIC, CLOSE LONG?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
@@ -120,7 +121,8 @@ void OnTick()
       }
    }
    else
-   if (KValueCurr <= VERY_LOW_STOCHASTIC && DValueCurr <= VERY_LOW_STOCHASTIC)
+   if (KValueCurr < DValueCurr &&
+       KValueCurr <= VERY_LOW_STOCHASTIC && DValueCurr <= VERY_LOW_STOCHASTIC)
    {
       Comment(StringFormat("\nVERY LOW STOCHASTIC, CLOSE SHORT?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,

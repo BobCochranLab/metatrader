@@ -42,6 +42,8 @@
 #define EXPERT_MAGIC 222   // MagicNumber of the expert
 #define LONG_STOCHASTIC 65.0
 #define SHORT_STOCHASTIC 35.0
+#define VERY_HIGH_STOCHASTIC 93.0
+#define VERY_LOW_STOCHASTIC 7.0
 #define MAX_TRADES 4
 #define CHIME_REPEATS 20
 #define CHIME_DELAY 2000
@@ -95,6 +97,52 @@ void OnTick()
    double MAFastHighCurr = MAFastHigharray[0];
    double MAFastLowCurr = MAFastLowarray[0];
 
+   if (KValueCurr >= VERY_HIGH_STOCHASTIC && DValueCurr >= VERY_HIGH_STOCHASTIC)
+   {
+      Comment(StringFormat("\nVERY HIGH STOCHASTIC, LONG CLOSE?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      if (PositionsTotal() < MAX_TRADES &&
+          LastSignal != iTime(_Symbol,_Period,0))
+      {
+         LastSignal = iTime(_Symbol,_Period,0);
+         
+         for (i = 1; i <= CHIME_REPEATS; i++)
+         {
+            PlaySound("alert.wav");
+            Sleep(CHIME_DELAY);
+         }
+      }
+      else
+      {
+         PlaySound(NULL);
+      }
+   }
+   else
+   if (KValueCurr <= VERY_LOW_STOCHASTIC && DValueCurr <= VERY_LOW_STOCHASTIC)
+   {
+      Comment(StringFormat("\nVERY LOW STOCHASTIC, LONG SHORT CLOSE?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      if (PositionsTotal() < MAX_TRADES &&
+          LastSignal != iTime(_Symbol,_Period,0))
+      {
+         LastSignal = iTime(_Symbol,_Period,0);
+         
+         for (i = 1; i <= CHIME_REPEATS; i++)
+         {
+            PlaySound("alert.wav");
+            Sleep(CHIME_DELAY);
+         }
+      }
+      else
+      {
+         PlaySound(NULL);
+      }
+   }
+   else
    if (MAFastLowCurr > MASlowHighCurr)
    {
       // We are in an uptrend.

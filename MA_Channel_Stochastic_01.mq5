@@ -3,7 +3,8 @@
 //|                              Copyright 2023, Automatic Forex LLC
 //|                                             https://www.mql5.com
 //|
-//| This MQL5 Expert Advisor script automates the following strategy:
+//| This MQL5 Expert Advisor script automates alerts for 
+//| the following strategy:
 //|   1)  On a 4-hour chart, create two pairs of moving average
 //|       indicators as follows:
 //|       a)  72-period Simple Moving Average of the highs
@@ -39,22 +40,41 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
+#define MAX_TRADES 4
 #define EXPERT_MAGIC 222   // MagicNumber of the expert
+
 #define LONG_STOCHASTIC 65.0
 #define SHORT_STOCHASTIC 35.0
 #define VERY_HIGH_STOCHASTIC 90.0
 #define VERY_LOW_STOCHASTIC 10.0
-#define MAX_TRADES 4
+#define REVERSAL_LONG_STOCHASTIC 15.0
+#define REVERSAL_SHORT_STOCHASTIC 85.0
+#define CONFIRM_REVERSAL_LONG 25.0
+#define CONFIRM_REVERSAL_SHORT 75.0
+
 #define CHIME_REPEATS 20
 #define CHIME_DELAY 2000
+
+// Signal names
+#define NO_SIGNAL 0
+#define UPTREND_STOCH_CROSS 1
+#define DOWNTREND_STOCH_CROSS 2
+#define REVERSAL_LONG_CROSS 3
+#define REVERSAL_SHORT_CROSS 4
+#define REVERSAL_LONG_CONFIRM 5
+#define REVERSAL_SHORT_CONFIRM 6
+#define VERY_HIGH_STOCH 7
+#define VERY_LOW_STOCH 8
 
 //--- input parameters
 input int K_Period = 14;  // Period for the %K line
 input int D_Period = 3;   // Period for the %D line
 input int Slowing = 3;    // Slowing parameter
 
-datetime LastTrade = D'1980.07.19 12:30:27';
+datetime LastSignal = D'1980.07.19 12:30:27';
 int i = 0;
+int CurrSignal = NO_SIGNAL;
+int PrevSignal = NO_SIGNAL;
 
 double Karray[];
 double Darray[];
@@ -62,6 +82,25 @@ double MASlowHigharray[];
 double MASlowLowarray[];
 double MAFastHigharray[];
 double MAFastLowarray[];
+
+void PlayChimeForBar()
+{
+   if (PositionsTotal() < MAX_TRADES &&
+       LastSignal != iTime(_Symbol,_Period,0))
+   {
+      LastSignal = iTime(_Symbol,_Period,0);
+      
+      for (i = 1; i <= CHIME_REPEATS; i++)
+      {
+         PlaySound("alert.wav");
+         Sleep(CHIME_DELAY);
+      }
+   }
+   else
+   {
+      PlaySound(NULL);
+   }
+}
 
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -97,6 +136,69 @@ void OnTick()
    double MAFastHighCurr = MAFastHigharray[0];
    double MAFastLowCurr = MAFastLowarray[0];
 
+   PlaySound(NULL);
+
+   // Alerts for possible reversal Stochastic crosses
+   //
+   if (DValuePrev < REVERSAL_LONG_STOCHASTIC &&
+       KValuePrev <= DValuePrev && KValueCurr > DValueCurr)
+   {
+      Comment(StringFormat("\nREVERSAL LONG STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = REVERSAL_LONG_CROSS;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+   else
+   if (DValuePrev > REVERSAL_SHORT_STOCHASTIC &&
+       KValuePrev >= DValuePrev && KValueCurr < DValueCurr)
+   {
+      Comment(StringFormat("\nREVERSAL SHORT STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = REVERSAL_SHORT_CROSS;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+
+   // Alerts for confirmation of reversal Stochastic crosses
+   //
+   if (PrevSignal == REVERSAL_LONG_CROSS &&
+       DValuePrev <= CONFIRM_REVERSAL_LONG &&
+       DValueCurr > CONFIRM_REVERSAL_LONG)
+   {
+      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL LONG STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = REVERSAL_LONG_CONFIRM;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+   else
+   if (PrevSignal == REVERSAL_SHORT_CROSS &&
+       DValuePrev >= CONFIRM_REVERSAL_SHORT &&
+       DValueCurr < CONFIRM_REVERSAL_SHORT)
+   {
+      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL SHORT STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = REVERSAL_SHORT_CONFIRM;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+
+
+   // Alerts for potential profit-taking
+   //
    if (KValueCurr > DValueCurr &&
        DValueCurr >= VERY_HIGH_STOCHASTIC)
    {
@@ -104,21 +206,10 @@ void OnTick()
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
               KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
-      if (PositionsTotal() < MAX_TRADES &&
-          LastSignal != iTime(_Symbol,_Period,0))
-      {
-         LastSignal = iTime(_Symbol,_Period,0);
-         
-         for (i = 1; i <= CHIME_REPEATS; i++)
-         {
-            PlaySound("alert.wav");
-            Sleep(CHIME_DELAY);
-         }
-      }
-      else
-      {
-         PlaySound(NULL);
-      }
+      CurrSignal = VERY_HIGH_STOCH;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
    }
    else
    if (KValueCurr < DValueCurr &&
@@ -128,49 +219,29 @@ void OnTick()
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
               KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
-      if (PositionsTotal() < MAX_TRADES &&
-          LastSignal != iTime(_Symbol,_Period,0))
-      {
-         LastSignal = iTime(_Symbol,_Period,0);
-         
-         for (i = 1; i <= CHIME_REPEATS; i++)
-         {
-            PlaySound("alert.wav");
-            Sleep(CHIME_DELAY);
-         }
-      }
-      else
-      {
-         PlaySound(NULL);
-      }
+      CurrSignal = VERY_LOW_STOCH;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
    }
    else
+   // Alerts for trend following
+   //
    if (MAFastLowCurr > MASlowHighCurr)
    {
       // We are in an uptrend.
       // Check for buy signal.
       if (KValuePrev < LONG_STOCHASTIC &&
-          KValuePrev < DValuePrev && KValueCurr > DValueCurr)
+          KValuePrev <= DValuePrev && KValueCurr > DValueCurr)
       {
          Comment(StringFormat("\nUPTREND, BUY SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
                  MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
                  KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
-         if (PositionsTotal() < MAX_TRADES &&
-             LastTrade != iTime(_Symbol,_Period,0))
-         {
-            LastTrade = iTime(_Symbol,_Period,0);
-            
-            for (i = 1; i <= CHIME_REPEATS; i++)
-            {
-               PlaySound("alert.wav");
-               Sleep(CHIME_DELAY);
-            }
-         }
-         else
-         {
-            PlaySound(NULL);
-         }
+         CurrSignal = UPTREND_STOCH_CROSS;
+         if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+         PlayChimeForBar();
       }
       else
       {
@@ -184,27 +255,16 @@ void OnTick()
       // We are in a downtrend.
       // Check for sell signal.
       if (KValuePrev > SHORT_STOCHASTIC &&
-          KValuePrev > DValuePrev && KValueCurr < DValueCurr)
+          KValuePrev >= DValuePrev && KValueCurr < DValueCurr)
       {
          Comment(StringFormat("\nDOWNTREND, SELL SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
                  MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
                  KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
-         if (PositionsTotal() < MAX_TRADES &&
-             LastTrade != iTime(_Symbol,_Period,0))
-         {
-            LastTrade = iTime(_Symbol,_Period,0);
-            
-            for (i = 1; i <= CHIME_REPEATS; i++)
-            {
-               PlaySound("alert.wav");
-               Sleep(CHIME_DELAY);
-            }
-         }
-         else
-         {
-            PlaySound(NULL);
-         }
+         CurrSignal = DOWNTREND_STOCH_CROSS;
+         if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+         PlayChimeForBar();
       }
       else
       {

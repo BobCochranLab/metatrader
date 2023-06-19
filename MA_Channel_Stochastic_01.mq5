@@ -42,8 +42,8 @@
 #define EXPERT_MAGIC 222   // MagicNumber of the expert
 #define LONG_STOCHASTIC 65.0
 #define SHORT_STOCHASTIC 35.0
-#define VERY_HIGH_STOCHASTIC 93.0
-#define VERY_LOW_STOCHASTIC 7.0
+#define VERY_HIGH_STOCHASTIC 90.0
+#define VERY_LOW_STOCHASTIC 10.0
 #define MAX_TRADES 4
 #define CHIME_REPEATS 20
 #define CHIME_DELAY 2000
@@ -98,7 +98,7 @@ void OnTick()
    double MAFastLowCurr = MAFastLowarray[0];
 
    if (KValueCurr > DValueCurr &&
-       KValueCurr >= VERY_HIGH_STOCHASTIC && DValueCurr >= VERY_HIGH_STOCHASTIC)
+       DValueCurr >= VERY_HIGH_STOCHASTIC)
    {
       Comment(StringFormat("\nVERY HIGH STOCHASTIC, CLOSE LONG?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
@@ -122,7 +122,7 @@ void OnTick()
    }
    else
    if (KValueCurr < DValueCurr &&
-       KValueCurr <= VERY_LOW_STOCHASTIC && DValueCurr <= VERY_LOW_STOCHASTIC)
+       DValueCurr <= VERY_LOW_STOCHASTIC)
    {
       Comment(StringFormat("\nVERY LOW STOCHASTIC, CLOSE SHORT?\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,

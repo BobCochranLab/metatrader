@@ -196,7 +196,6 @@ void OnTick()
       PlayChimeForBar();
    }
 
-
    // Alerts for potential profit-taking
    //
    if (KValueCurr > DValueCurr &&
@@ -224,7 +223,7 @@ void OnTick()
 
       PlayChimeForBar();
    }
-   else
+
    // Alerts for trend following
    //
    if (MAFastLowCurr > MASlowHighCurr)

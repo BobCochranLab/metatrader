@@ -129,8 +129,10 @@ void OnTick()
    
    double KValueCurr = Karray[0];
    double DValueCurr = Darray[0];
-   double KValuePrev = Karray[1]; // Make the index 2 to look at two bars ago.
-   double DValuePrev = Darray[1]; // Make the index 2 to look at two bars ago.
+   double KValuePrev = Karray[1];
+   double DValuePrev = Darray[1];
+   double KValuePrevPrev = Karray[2]; // Index 2 looks at two bars ago.
+   double DValuePrevPrev = Darray[2]; // Index 2 looks at two bars ago.
    double MASlowHighCurr = MASlowHigharray[0];
    double MASlowLowCurr = MASlowLowarray[0];
    double MAFastHighCurr = MAFastHigharray[0];
@@ -230,8 +232,9 @@ void OnTick()
    {
       // We are in an uptrend.
       // Check for buy signal.
-      if (KValuePrev < LONG_STOCHASTIC &&
-          KValuePrev <= DValuePrev && KValueCurr > DValueCurr)
+      if (KValueCurr > DValueCurr &&
+          KValuePrevPrev < LONG_STOCHASTIC &&
+          KValuePrevPrev <= DValuePrevPrev && KValuePrev > DValuePrev)
       {
          Comment(StringFormat("\nUPTREND, BUY SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
                  MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
@@ -253,8 +256,9 @@ void OnTick()
    {
       // We are in a downtrend.
       // Check for sell signal.
-      if (KValuePrev > SHORT_STOCHASTIC &&
-          KValuePrev >= DValuePrev && KValueCurr < DValueCurr)
+      if (KValueCurr < DValueCurr &&
+          KValuePrevPrev > SHORT_STOCHASTIC &&
+          KValuePrevPrev >= DValuePrevPrev && KValuePrev < DValuePrev)
       {
          Comment(StringFormat("\nDOWNTREND, SELL SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
                  MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,

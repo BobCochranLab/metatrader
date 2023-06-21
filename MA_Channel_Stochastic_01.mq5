@@ -65,6 +65,8 @@
 #define REVERSAL_SHORT_CONFIRM 6
 #define VERY_HIGH_STOCH 7
 #define VERY_LOW_STOCH 8
+#define VERY_HIGH_CROSS 9
+#define VERY_LOW_CROSS 10
 
 //--- input parameters
 input int K_Period = 14;  // Period for the %K line
@@ -140,6 +142,36 @@ void OnTick()
 
    PlaySound(NULL);
 
+   // Alerts for very low and very high Stochastic crosses
+   //
+   if (KValueCurr > DValueCurr &&
+       KValuePrevPrev < VERY_LOW_STOCHASTIC &&
+       KValuePrevPrev <= DValuePrevPrev && KValuePrev > DValuePrev)
+   {
+      Comment(StringFormat("\nVERY LOW CROSS, BUY SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = VERY_LOW_CROSS;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+   else
+   if (KValueCurr < DValueCurr &&
+       KValuePrevPrev > VERY_LOW_STOCHASTIC &&
+       KValuePrevPrev >= DValuePrevPrev && KValuePrev < DValuePrev)
+   {
+      Comment(StringFormat("\nVERY HIGH CROSS, SELL SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+              MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev));
+
+      CurrSignal = VERY_HIGH_CROSS;
+      if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
+
+      PlayChimeForBar();
+   }
+   
    // Alerts for possible reversal Stochastic crosses
    //
    if (DValuePrev < REVERSAL_LONG_STOCHASTIC &&

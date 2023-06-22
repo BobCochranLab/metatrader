@@ -52,7 +52,7 @@
 #define CONFIRM_REVERSAL_LONG 25.0
 #define CONFIRM_REVERSAL_SHORT 75.0
 
-#define CHIME_REPEATS 20
+#define CHIME_REPEATS 5
 #define CHIME_DELAY 2000
 
 // Signal names

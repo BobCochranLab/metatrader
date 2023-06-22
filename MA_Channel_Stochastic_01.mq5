@@ -94,7 +94,7 @@ void PlayChimeForBar()
       
       for (i = 1; i <= CHIME_REPEATS; i++)
       {
-         PlaySound("alert.wav");
+         PlaySound("alert2.wav");
          Sleep(CHIME_DELAY);
       }
    }

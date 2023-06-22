@@ -159,7 +159,7 @@ void OnTick()
    }
    else
    if (KValueCurr < DValueCurr &&
-       KValuePrevPrev > VERY_LOW_STOCHASTIC &&
+       KValuePrevPrev > VERY_HIGH_STOCHASTIC &&
        KValuePrevPrev >= DValuePrevPrev && KValuePrev < DValuePrev)
    {
       Comment(StringFormat("\nVERY HIGH CROSS, SELL SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",

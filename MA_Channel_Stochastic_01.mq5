@@ -171,7 +171,7 @@ void OnTick()
 
       PlayChimeForBar();
    }
-   
+   else
    // Alerts for possible reversal Stochastic crosses
    //
    if (DValuePrev < REVERSAL_LONG_STOCHASTIC &&
@@ -229,7 +229,7 @@ void OnTick()
 
       PlayChimeForBar();
    }
-
+   else
    // Alerts for potential profit-taking
    //
    if (KValueCurr > DValueCurr &&
@@ -257,7 +257,7 @@ void OnTick()
 
       PlayChimeForBar();
    }
-
+   else
    // Alerts for trend following
    //
    if (MAFastLowCurr > MASlowHighCurr)

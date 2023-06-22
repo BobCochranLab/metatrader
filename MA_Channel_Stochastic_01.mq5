@@ -148,7 +148,7 @@ void OnTick()
        KValuePrevPrev < VERY_LOW_STOCHASTIC &&
        KValuePrevPrev <= DValuePrevPrev && KValuePrev > DValuePrev)
    {
-      Comment(StringFormat("\nVERY LOW CROSS, BUY SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+      Comment(StringFormat("\nVERY LOW STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
               KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
@@ -162,7 +162,7 @@ void OnTick()
        KValuePrevPrev > VERY_HIGH_STOCHASTIC &&
        KValuePrevPrev >= DValuePrevPrev && KValuePrev < DValuePrev)
    {
-      Comment(StringFormat("\nVERY HIGH CROSS, SELL SIGNAL!\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+      Comment(StringFormat("\nVERY HIGH STOCHASTIC CROSS SEEN\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
               MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
               KValueCurr, DValueCurr, KValuePrev, DValuePrev));
 
@@ -202,7 +202,7 @@ void OnTick()
 
    // Alerts for confirmation of reversal Stochastic crosses
    //
-   if (PrevSignal == REVERSAL_LONG_CROSS &&
+   if ((PrevSignal == REVERSAL_LONG_CROSS || PrevSignal == VERY_LOW_CROSS) &&
        DValuePrev <= CONFIRM_REVERSAL_LONG &&
        DValueCurr > CONFIRM_REVERSAL_LONG)
    {
@@ -216,7 +216,7 @@ void OnTick()
       PlayChimeForBar();
    }
    else
-   if (PrevSignal == REVERSAL_SHORT_CROSS &&
+   if ((PrevSignal == REVERSAL_SHORT_CROSS || PrevSignal == VERY_HIGH_CROSS) &&
        DValuePrev >= CONFIRM_REVERSAL_SHORT &&
        DValueCurr < CONFIRM_REVERSAL_SHORT)
    {

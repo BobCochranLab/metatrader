@@ -52,8 +52,9 @@
 #define CONFIRM_REVERSAL_LONG 25.0
 #define CONFIRM_REVERSAL_SHORT 75.0
 
-#define CHIME_REPEATS 5
+#define CHIME_REPEATS 10
 #define CHIME_DELAY 2000
+#define MAX_TICK_COUNT 20
 
 //Signal strings
 string NoSignal = "No Signal";
@@ -76,7 +77,8 @@ input int D_Period = 3;   // Period for the %D line
 input int Slowing = 3;    // Slowing parameter
 
 datetime LastSignal = D'1980.07.19 12:30:27';
-int i = 0;
+int i = 0; // General index/counter
+uint TickCount = 0;
 
 double Karray[];
 double Darray[];
@@ -84,6 +86,49 @@ double MASlowHigharray[];
 double MASlowLowarray[];
 double MAFastHigharray[];
 double MAFastLowarray[];
+
+double TickArray[MAX_TICK_COUNT];
+double HighestTick = 0.0;
+double LowestTick = 0.0;
+double TickDelta = 0.0;
+
+uint GetTickCounter()
+{
+   if (TickCount == MAX_TICK_COUNT)
+   {
+      TickCount = 0;
+   }
+   else
+   {
+      TickCount++;
+   }
+   return TickCount;
+}
+
+void InitializeTickArray()
+{
+   for (i = 0; i < MAX_TICK_COUNT; i++) TickArray[i] = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+}
+
+double GetHighestTick()
+{
+   double HighestBid = 0.0;
+   for (i = 0; i < MAX_TICK_COUNT; i++)
+   {
+      if (TickArray[i] > HighestBid) HighestBid = TickArray[i];
+   }
+   return HighestBid;
+}
+
+double GetLowestTick()
+{
+   double LowestBid = 1000000.0;
+   for (i = 0; i < MAX_TICK_COUNT; i++)
+   {
+      if (TickArray[i] < LowestBid) LowestBid = TickArray[i];
+   }
+   return LowestBid;
+}
 
 void PlayChimeForBar()
 {
@@ -104,11 +149,23 @@ void PlayChimeForBar()
    }
 }
 
+void OnInit(void)
+{
+   InitializeTickArray();
+}
+
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 void OnTick()
 {
+   // Idea is to grab the latest 20 ticks, find high and low, and alert if there is a big enough delta.
+   TickCount = GetTickCounter();
+   TickArray[TickCount] = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   HighestTick = GetHighestTick();
+   LowestTick = GetLowestTick();
+   TickDelta = 10000.0 * (HighestTick - LowestTick);
+
    ArraySetAsSeries(Karray, true);
    ArraySetAsSeries(Darray, true);
    ArraySetAsSeries(MASlowHigharray, true);
@@ -148,9 +205,10 @@ void OnTick()
        KValuePrevPrev < VERY_LOW_STOCHASTIC &&
        KValuePrevPrev <= DValuePrevPrev && KValuePrev > DValuePrev)
    {
-      Comment(StringFormat("\nVERY LOW STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nVERY LOW STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr\\ is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = VeryLowStochasticCross;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -162,9 +220,10 @@ void OnTick()
        KValuePrevPrev > VERY_HIGH_STOCHASTIC &&
        KValuePrevPrev >= DValuePrevPrev && KValuePrev < DValuePrev)
    {
-      Comment(StringFormat("\nVERY HIGH STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nVERY HIGH STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = VeryHighStochasticCross;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -177,9 +236,10 @@ void OnTick()
    if (DValuePrev < REVERSAL_LONG_STOCHASTIC &&
        KValuePrev <= DValuePrev && KValueCurr > DValueCurr)
    {
-      Comment(StringFormat("\nREVERSAL LONG STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nREVERSAL LONG STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = ReversalLongStochasticCross;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -190,9 +250,10 @@ void OnTick()
    if (DValuePrev > REVERSAL_SHORT_STOCHASTIC &&
        KValuePrev >= DValuePrev && KValueCurr < DValueCurr)
    {
-      Comment(StringFormat("\nREVERSAL SHORT STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nREVERSAL SHORT STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = ReversalShortStochasticCross;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -206,9 +267,10 @@ void OnTick()
        DValuePrev <= CONFIRM_REVERSAL_LONG &&
        DValueCurr > CONFIRM_REVERSAL_LONG)
    {
-      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL LONG STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL LONG STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = ReversalLongConfirmation;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -220,9 +282,10 @@ void OnTick()
        DValuePrev >= CONFIRM_REVERSAL_SHORT &&
        DValueCurr < CONFIRM_REVERSAL_SHORT)
    {
-      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL SHORT STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\n*** CONFIRMED *** REVERSAL SHORT STOCHASTIC CROSS SEEN\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = ReversalShortConfirmation;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -235,9 +298,10 @@ void OnTick()
    if (KValueCurr > DValueCurr &&
        DValueCurr >= VERY_HIGH_STOCHASTIC)
    {
-      Comment(StringFormat("\nVERY HIGH STOCHASTIC, CLOSE LONG?\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nVERY HIGH STOCHASTIC, CLOSE LONG?\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = VeryHighStochastic;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -248,9 +312,10 @@ void OnTick()
    if (KValueCurr < DValueCurr &&
        DValueCurr <= VERY_LOW_STOCHASTIC)
    {
-      Comment(StringFormat("\nVERY LOW STOCHASTIC, CLOSE SHORT?\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nVERY LOW STOCHASTIC, CLOSE SHORT?\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
 
       CurrSignal = VeryLowStochastic;
       if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -269,9 +334,10 @@ void OnTick()
           KValuePrevPrev < LONG_STOCHASTIC &&
           KValuePrevPrev <= DValuePrevPrev)
       {
-         Comment(StringFormat("\nUPTREND, BUY SIGNAL!\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+         Comment(StringFormat("\nUPTREND, BUY SIGNAL!\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
                  PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+                 HighestTick, LowestTick, TickDelta));
 
          CurrSignal = UptrendStochasticCross;
          if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -280,9 +346,10 @@ void OnTick()
       }
       else
       {
-         Comment(StringFormat("\nUPTREND, No Buy Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+         Comment(StringFormat("\nUPTREND, No Buy Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
                  PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+                 HighestTick, LowestTick, TickDelta));
       }
    }
    else if (MAFastHighCurr < MASlowLowCurr)
@@ -294,9 +361,10 @@ void OnTick()
           KValuePrevPrev > SHORT_STOCHASTIC &&
           KValuePrevPrev >= DValuePrevPrev)
       {
-         Comment(StringFormat("\nDOWNTREND, SELL SIGNAL!\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+         Comment(StringFormat("\nDOWNTREND, SELL SIGNAL!\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
                  PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+                 HighestTick, LowestTick, TickDelta));
 
          CurrSignal = DowntrendStochasticCross;
          if (CurrSignal != PrevSignal) PrevSignal = CurrSignal;
@@ -305,16 +373,18 @@ void OnTick()
       }
       else
       {
-         Comment(StringFormat("\nDOWNTREND, No Buy Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+         Comment(StringFormat("\nDOWNTREND, No Buy Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
                  PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+                 KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+                 HighestTick, LowestTick, TickDelta));
       }
    }
    else
    {
-      Comment(StringFormat("\nNO TREND, No Trade Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f\n\nKValuePrevPrev is %.2f\nDValuePrevPrev is %.2f",
+      Comment(StringFormat("\nNO TREND, No Trade Signal\nPrevious Signal:  %s\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.1f\nDValueCurr is %.1f\n\nKValuePrev is %.1f\nDValuePrev is %.1f\n\nKValuePrevPrev is %.1f\nDValuePrevPrev is %.1f\n\nTick Count is %d\n\nHighest Tick is %.6f\nLowest Tick is %.6f\nTickDelta is %.1f",
               PrevSignal, MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
-              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev));
+              KValueCurr, DValueCurr, KValuePrev, DValuePrev, KValuePrevPrev, DValuePrevPrev, TickCount,
+              HighestTick, LowestTick, TickDelta));
    }
 }
 //+------------------------------------------------------------------+

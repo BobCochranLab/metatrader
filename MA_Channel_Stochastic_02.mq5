@@ -94,7 +94,7 @@ double TickDelta = 0.0;
 
 uint GetTickCounter()
 {
-   if (TickCount == MAX_TICK_COUNT)
+   if (TickCount == MAX_TICK_COUNT-1)
    {
       TickCount = 0;
    }

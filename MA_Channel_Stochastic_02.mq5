@@ -55,6 +55,7 @@
 #define CHIME_REPEATS 10
 #define CHIME_DELAY 2000
 #define MAX_TICK_COUNT 20
+#define TICK_WINDOW_ALERT_DELTA 5.0
 
 //Signal strings
 string NoSignal = "No Signal";
@@ -159,12 +160,16 @@ void OnInit(void)
 //+------------------------------------------------------------------+
 void OnTick()
 {
-   // Idea is to grab the latest 20 ticks, find high and low, and alert if there is a big enough delta.
+   // Grab the latest 20 ticks, find high and low, and alert if there is a big enough delta.
    TickCount = GetTickCounter();
    TickArray[TickCount] = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    HighestTick = GetHighestTick();
    LowestTick = GetLowestTick();
    TickDelta = 10000.0 * (HighestTick - LowestTick);
+   if (TickDelta >= TICK_WINDOW_ALERT_DELTA)
+   {
+      PlayChimeForBar();
+   }
 
    ArraySetAsSeries(Karray, true);
    ArraySetAsSeries(Darray, true);

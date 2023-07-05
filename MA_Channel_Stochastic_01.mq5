@@ -303,7 +303,7 @@ void OnTick()
       }
       else
       {
-         Comment(StringFormat("\nDOWNTREND, No Buy Signal\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
+         Comment(StringFormat("\nDOWNTREND, No Sell Signal\n\nMASlowHighCurr is %.6f\nMASlowLowCurr is %.6f\n\nMAFastHighCurr is %.6f\nMAFastLowCurr is %.6f\n\n\nKValueCurr is %.2f\nDValueCurr is %.2f\n\nKValuePrev is %.2f\nDValuePrev is %.2f",
                  MASlowHighCurr, MASlowLowCurr, MAFastHighCurr, MAFastLowCurr,
                  KValueCurr, DValueCurr, KValuePrev, DValuePrev));
       }

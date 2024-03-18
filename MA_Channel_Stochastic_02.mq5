@@ -1,6 +1,6 @@
 //+------------------------------------------------------------------+
 //|                                     MA_Channel_Stochastic_02.mq5
-//|                              Copyright 2023, Automatic Forex LLC
+//|                           Copyright 2023-2024, Robert C. Cochran
 //|                                             https://www.mql5.com
 //|
 //| This MQL5 Expert Advisor script automates alerts for 

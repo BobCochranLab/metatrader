@@ -2,7 +2,7 @@
 
 # Pure Arbitrage Multi-Pair Trading Bots
 
-The Master and Slave mq4 files use an interprocess communication library called FX Blue Quick Channel for cross-communicating currency exchange rates across two different brokers, and placing opposite-direction same-pair trades when significant discrepancies are seen.  When the net value of the two trades come into profit after the exchange rates return to non-discrepant levels, profits are taken.
+The Primary and Secondary mq4 files use an interprocess communication library called FX Blue Quick Channel for cross-communicating currency exchange rates across two different brokers, and placing opposite-direction same-pair trades when significant discrepancies are seen.  When the net value of the two trades come into profit after the exchange rates return to non-discrepant levels, profits are taken.
 
 # MA_Channel_Stochastic_02.mq5
 
